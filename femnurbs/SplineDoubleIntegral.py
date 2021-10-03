@@ -1,7 +1,8 @@
 import numpy as np
+import femnurbs.SplineUsefulFunctions as SUF
 
 
-class SplineIntegralDouble:
+class SplineDoubleIntegral:
 
     @staticmethod
     def validation_entry(j, k, sides):
@@ -89,7 +90,7 @@ class SplineIntegralDouble:
         This function returns [M_{i}]
         """
 
-        SplineIntegralDouble.validation_entry(j, k, sides)
+        SplineDoubleIntegral.validation_entry(j, k, sides)
         if k is None:
             k = j
         sides = np.array(sides)
@@ -100,25 +101,25 @@ class SplineIntegralDouble:
             transpose = False
 
         if j == 0 and k == 0:
-            M = SplineIntegralDouble.__computeM00()
+            M = SplineDoubleIntegral.__computeM00()
         elif j == 1 and k == 0:
-            M = SplineIntegralDouble.__computeM10()
+            M = SplineDoubleIntegral.__computeM10()
         elif j == 1 and k == 1:
-            M = SplineIntegralDouble.__computeM11()
+            M = SplineDoubleIntegral.__computeM11()
         elif j == 2 and k == 0:
-            M = SplineIntegralDouble.__computeM20(sides)
+            M = SplineDoubleIntegral.__computeM20(sides)
         elif j == 2 and k == 1:
-            M = SplineIntegralDouble.__computeM21(sides)
+            M = SplineDoubleIntegral.__computeM21(sides)
         elif j == 2 and k == 2:
-            M = SplineIntegralDouble.__computeM22(sides)
+            M = SplineDoubleIntegral.__computeM22(sides)
         elif j == 3 and k == 0:
-            M = SplineIntegralDouble.__computeM30(sides)
+            M = SplineDoubleIntegral.__computeM30(sides)
         elif j == 3 and k == 1:
-            M = SplineIntegralDouble.__computeM31(sides)
+            M = SplineDoubleIntegral.__computeM31(sides)
         elif j == 3 and k == 2:
-            M = SplineIntegralDouble.__computeM32(sides)
+            M = SplineDoubleIntegral.__computeM32(sides)
         elif j == 3 and k == 3:
-            M = SplineIntegralDouble.__computeM33(sides)
+            M = SplineDoubleIntegral.__computeM33(sides)
         else:
             errormsg = "We are able to get only j=0, 1, 2 and 3"
             raise NotImplementedError(errormsg)
@@ -327,174 +328,26 @@ class SplineIntegralDouble:
         M[2, 1] += consts[9]
         return M
 
+    @staticmethod
+    def getIntegralAllDomain(U, j=None):
+        SUF.isValidU(U)
 
-def main():
-    one = sp.Rational(1, 1)
-
-    n = 30
-    U = np.zeros(n + 1, dtype="object")
-    for i in range(n + 1):
-        U[i] = sp.symbols("u" + str(i))
-
-    # U = np.linspace(0, 1, n+1)
-
-    i = 8
-    p = 3
-    jmax = 3
-    kmax = 0
-    nivel = 4
-    p = max([jmax, kmax])
-    hi = sp.symbols("hi")
-
-    a, b, c, d, e, f = sp.symbols("a b c d e f")
-    # b = 0
-    # d = 1
-
-    # b = sp.Rational(1, 1) + 1
-    # a = sp.Rational(0, 1) + b
-    # d = sp.Rational(1, 1) + 1
-    # e = sp.Rational(1, 1) + d
-
-    ee = e
-    # a = 1 + a0 + b0 + c0
-    # b = 1 + b0 + c0
-    # c = 1 + c0
-    b0 = b - 1
-    a0 = a - b
-    # d = 1 + d0
-    # e = 1 + d0 + e0
-    # f = 1 + d0 + e0 + f0
-    d0 = d - 1
-    e0 = ee - d
-
-    # b0 = 1
-    # d0 = 1
-
-    # a0 = sp.Rational(1, 1)
-    # b0 = sp.Rational(1, 1)
-    # d0 = sp.Rational(1, 1)
-    # e0 = sp.Rational(1, 1)
-
-    # U[i-2] = U[i-3] + a0*hi
-    U[i - 1] = U[i - 2] + a0 * hi
-    U[i] = U[i - 1] + b0 * hi
-    U[i + 1] = U[i] + hi
-    U[i + 2] = U[i + 1] + d0 * hi
-    U[i + 3] = U[i + 2] + e0 * hi
-    # U[i+4] = U[i+3] + f0*hi
-
-    print(U)
-    print("U[i] = ")
-    print(U[i])
-
-    u = sp.symbols("u")
-
-    dU = np.zeros((n, p + 1), dtype="object")
-    for bb in range(n - p - 1):
-        for aa in range(1, p + 1):
-            dU[bb, aa] = U[bb + aa] - U[bb]
-            # dU[bb, aa] = sp.symbols("A_{%d%d}"%(bb, aa))
-
-    def Nfunc(i, j, k, u):
-        if j < 0:
-            return 0
-        if j == 0:
-            if i == k:
-                return 1
-            else:
-                return 0
-        else:
-            factor1 = (u - U[i]) / dU[i, j]
-            factor2 = 1 + (U[i + 1] - u) / dU[i + 1, j]
-            return factor1 * Nfunc(i, j - 1, k, u) + factor2 * Nfunc(i + 1, j - 1, k, u)
-
-    def mdc(a, b):
-        if a < b:
-            a, b = b, a
-        r = a % b
-        while r != 0:
-            a, b = b, r
-            r = a % b
-        return b
-
-    def mmc(a, b):
-        return a * b / mdc(a, b)
-
-    h = sp.symbols("h")
-
-    Nj = np.zeros(p + 1, dtype="object")
-    # Nk = np.zeros(p+1, dtype="object")
-    for z in range(p + 1):
-        Nj[z] = Nfunc(i - p + z, jmax, i, u)
-        Nj[z] = sp.sympify(Nj[z]).subs(u, h + U[i])
-        # Nk[z] = Nfunc(i-p+z, kmax, i, u)
-        # Nk[z] = sp.sympify(Nk[z]).subs(u, h + U[i])
-
-    print("Nj = ")
-    for z in range(p + 1):
-        print("[%d/%d] = %s" % (z + 1, p + 1, str(Nj[z])))
-    # print("Nk = ")
-    # for z in range(p+1):
-    #     print("[%d/%d] = %s" % (z+1, p+1, str(Nk[z])))
-
-    A = np.zeros((p + 1, p + 1), dtype="object")
-    for aa in range(p + 1):
-        for bb in range(p + 1):
-            A[aa, bb] = sp.symbols("A_{%d%d}" % (aa, bb))
-
-    F = np.copy(Nj)
-    # aa = 0
-    # print("U = ", U)
-    # print("U[i+aa] = ", U[i+aa])
-    # print("U[i-p+1+aa] = ", U[i-p+aa+1])
-    # for aa in range(p+1):
-    #     F[aa] *= (U[i+aa]-U[i-p+1+aa])/A[p, aa]
-
-    V = np.zeros((p + 1), dtype="object")
-    for aa in range(p + 1):
-        termo = 1
-        integra = F[aa] * termo / hi
-        V[aa] = sp.integrate(integra, (h, 0, hi))
-        V[aa] = sp.simplify(V[aa])
-        V[aa] /= termo
-
-    if p == 3:
-        V[1:3] *= (b + d - 1) / c
-    for aa in range(len(V)):
-        V[aa] = sp.simplify(V[aa])
-
-    print("V = ")
-    for aa, v in enumerate(V):
-        print("V[%d] = %s" % (aa, str(v)))
-
-    R = sp.Rational
-    a0 = R(1, 5)
-    b0 = R(1, 5)
-    d0 = R(1, 5)
-    e0 = R(1, 5)
-
-    ava = a0 + b0 + 1
-    bva = b0 + 1
-    cva = b0 + 1 + d0
-    dva = 1 + d0
-    eva = 1 + d0 + e0
-
-    fator = R(1, 1)
-    for aa in range(len(V)):
-        V[aa] = V[aa].subs(a, ava)
-        V[aa] = V[aa].subs(b, bva)
-        V[aa] = V[aa].subs(c, cva)
-        V[aa] = V[aa].subs(d, dva)
-        V[aa] = V[aa].subs(e, eva)
-        num, den = sp.fraction(V[aa])
-        fator = mmc(fator, den)
-
-    V *= fator
-    print("V = ", fator)
-    for aa, v in enumerate(V):
-        print("V[%d] = %s" % (aa, str(v)))
-
-
-if __name__ == "__main__":
-    # main()
-    pass
+        p = SUF.getPfromU(U)
+        n = SUF.getNfromU(U)
+        if j is None:
+            j = p
+        elif j < 0 or j > p:
+            raise ValueError("You must pass 0 <= j <= p")
+        h = SUF.transformUtoH(U, j=j)
+        t = n - p
+        M = np.zeros((n + j - p, n + j - p))
+        for z in range(t):
+            i = z + p
+            hi = h[z + j - 1]
+            if hi == 0:
+                continue
+            Hcut = SUF.cutHtoElementZ(h, z)
+            Scut = SUF.transformHtoSides(Hcut)
+            Mpp = SplineDoubleIntegral.getIntegralBase(j=j, k=j, sides=Scut)
+            M[z:z + j + 1, z:z + j + 1] += hi * Mpp
+        return M
