@@ -1,6 +1,24 @@
 import numpy as np
 import femnurbs.SplineUsefulFunctions as SUF
-from scipy.special import binom
+
+
+def binom(a, b):
+    if not isinstance(a, int) or not isinstance(b, int):
+        raise TypeError("The binoms parameters are integers")
+    if a < 0 or b < 0:
+        raise ValueError("The values in binoms must be non-negatives")
+    if a < b:
+        raise ValueError("binom(a,b) must have 0 <= b <= a")
+    if b == 0:
+        return 1
+    if a == 0 or a == 1:
+        return 1
+    result = int(1)
+    for i in range(a, a - b, -1):
+        result *= int(i)
+    for i in range(2, b + 1):
+        result //= int(i)
+    return result
 
 
 def getVr(p, w):
@@ -112,3 +130,16 @@ def computeForceResultant(U, j, w, f):
         feval[i] = f(u)
     F = W @ feval
     return F
+
+
+if __name__ == "__main__":
+    print("binom(0, 0) = " + str(binom(0, 0)))
+    print("binom(1, 0) = " + str(binom(1, 0)))
+    print("binom(1, 0) = " + str(binom(1, 1)))
+    print("binom(2, 0) = " + str(binom(2, 0)))
+    print("binom(2, 1) = " + str(binom(2, 1)))
+    print("binom(2, 2) = " + str(binom(2, 2)))
+    print("binom(3, 0) = " + str(binom(3, 0)))
+    print("binom(3, 1) = " + str(binom(3, 1)))
+    print("binom(3, 2) = " + str(binom(3, 2)))
+    print("binom(3, 3) = " + str(binom(3, 3)))
