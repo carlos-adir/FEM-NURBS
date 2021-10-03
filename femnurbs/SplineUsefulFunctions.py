@@ -83,7 +83,13 @@ def URandom(p, n):
     """
     if n <= p:
         n = p + 1
-    intervals = np.random.rand(n - p)
+    if True:  # The steps are almost the same
+        variation = 0.2  # equiv to 50 %
+        SIU = 1 / (n - p)  # size_interval_uniform, the difference on UUniform
+        delta = 2 * np.random.rand(n - p) - 1
+        intervals = SIU * (1 + variation * delta)
+    else:
+        intervals = np.random.rand(n - p)
     intervals /= np.sum(intervals)
     X = np.cumsum(intervals)
     X[-1] = 1
@@ -230,6 +236,21 @@ def isDiagonalDominant(M):
         if not (soma < np.abs(M[i, i])):
             return False
     return True
+
+
+def rafineU(U, Ne=1):
+    """
+
+    """
+    p = getPfromU(U)
+    n = getNfromU(U)
+    Ueval = np.array([])
+    for z in range(n - p):
+        i = p + z
+        addedUeval = np.linspace(U[i], U[i + 1], Ne, endpoint=False)
+        Ueval = np.concatenate((Ueval, addedUeval))
+    Ueval = np.concatenate((Ueval, np.array([1])))
+    return Ueval
 
 
 def getUplot(U, Ne=128):
